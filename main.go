@@ -8,20 +8,17 @@ import (
 func main() {
 	//data, err := os.ReadFile("./single_instruction")
 	//check(err)
-	data, err := ioutil.ReadFile("single_instruction")
+	data, err := ioutil.ReadFile("multiple_instructions")
 	check(err)
-	for _, n := range(data) {
-		fmt.Printf("%08b ", n) 
-	}
-
-	var instructions uint8 = data[0]
-	var opcode uint8 = clearBits(instructions, 0b11111100) 
-
-	fmt.Printf("instrution %08b\n", instructions)
-	fmt.Printf("opcode %08b\n", opcode)
-
-	if (opcode == 0b10001000) {
-		decodeMov(data[0], data[1])
+	var index int = 0
+	for index < len(data){
+		var instruction uint8 = data[index]
+		var register uint8 = data[index+1]
+		var opcode uint8 = clearBits(instruction, 0b11111100) 
+		if (opcode == 0b10001000) {
+			decodeMov(instruction, register)
+		}
+		index += 2
 	}
 }
 
@@ -49,9 +46,13 @@ func decodeMov(instructions uint8, register uint8) {
 			fmt.Printf("mov %s %s\n", revReg2, reg2)
 		}
 	} else {
-		fmt.Printf("mov %s %s\n", reg1, revReg1)
+		if (direction == 0b00000010) {
+			fmt.Printf("mov %s %s\n", reg1, revReg1)
+		}
+		if (direction == 0b00000000) {
+			fmt.Printf("mov %s %s\n", revReg1, reg1)
+		}
 	}
-	fmt.Println("mov")
 }
 
 func isMemoryMode(input uint8) bool {
@@ -81,6 +82,18 @@ func getRegAsString(reg uint8) (string, string) {
 	case 0b00011000, 0b00000011:
 		reg1 = "bl"
 		reg2 = "bx"
+	case 0b00100000, 0b00000100:
+		reg1 = "ah"
+		reg2 = "sp"
+	case 0b00101000, 0b00000101:
+		reg1 = "ch"
+		reg2 = "bp"
+	case 0b00110000, 0b00000110:
+		reg1 = "dh"
+		reg2 = "si"
+	case 0b00111000, 0b00000111:
+		reg1 = "bh"
+		reg2 = "di"
 	}
 	return reg1, reg2
 }
@@ -91,8 +104,3 @@ func check(e error) {
 	}
 }
 
-const (
-	AL = 0b00000000
-	CL = 0b00001000
-	DL = 0b00010000
-)
