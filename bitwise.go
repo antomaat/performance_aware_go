@@ -12,11 +12,13 @@ func main() {
 
 func shifting() {
 	var original uint8 = 0b11010111
-	var shift_left uint8 = original << 2
-	var shift_right uint8 = original >> 2
+	var shift_left uint8 = original << 6
+	var shift_right uint8 = original >> 6 & trunc(2)
+	var isOne = shift_right == 3
 	fmt.Printf("original %03b\n", original)
 	fmt.Printf("shift left %08b\n", shift_left)
 	fmt.Printf("shift right %08b\n", shift_right)
+	fmt.Printf("isOne\n", isOne)
 }
 
 func lightManipulation() {
@@ -62,4 +64,13 @@ func toggleOutsideLights(lights uint8) uint8 {
 
 func turnAllLightsOff(lights uint8) uint8 {
 	return lights ^ lights
+}
+
+func trunc(length int) byte {
+	m := byte(1)
+	for i := 1; i < length; i++ {
+		m = m << 1
+		m |= 1
+	}
+	return m
 }

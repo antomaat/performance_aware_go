@@ -1,0 +1,18 @@
+" ============================================================================
+" Netrw Directory Listing                                        (netrw v171)
+"   /projects/performance/homework
+"   Sorted by      name
+"   Sort sequence: [\/]$,\<core\%(\.\d\+\)\=\>,\.h$,\.c$,\.cpp$,\~\=\*$,*,\.o$,\.obj$,\.info$,\.swp$,\.bak$,\~$
+"   Quick Help: <F1>:help  -:go up dir  D:delete  R:rename  s:sort-by  x:special
+" ==============================================================================
+../
+./
+.git/
+bitwise.go
+main.go
+more_mov_instructions
+more_mov_instructions.asm
+multiple_instructions
+multiple_instructions.asm
+single_instruction
+single_instruction.asm
