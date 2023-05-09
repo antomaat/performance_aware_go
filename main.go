@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"strconv"
 )
 
 var instTable = []inst{
@@ -152,21 +153,21 @@ func disMovComplex(instructions []uint8, inst inst) []uint8 {
 		if (isDestinationReg) {
 			if (isWide) {
 				destination = reg2 
-				source = translateMemoryDisplacement00(rm)
+				source = "[" + translateMemoryDisplacement00(rm) + "]"
 			} else {
 				destination = reg1 
-				source = translateMemoryDisplacement00(rm) 
+				source = "[" + translateMemoryDisplacement00(rm) + "]"
 			}
 		} else {
 			if (isWide) {
-				destination = translateMemoryDisplacement00(rm) 
+				destination = "[" + translateMemoryDisplacement00(rm) + "]"
 				source = reg2
 			} else {
-				destination = translateMemoryDisplacement00(rm)
+				destination = "[" + translateMemoryDisplacement00(rm) + "]"
 				source = reg1
 			}
 		}
-		fmt.Printf("mov %s %s \n", destination, source)
+		fmt.Printf("mov %s, %s \n", destination, source)
 	}
 	if (mod == 0b01) {
 		var destination = ""
@@ -175,24 +176,30 @@ func disMovComplex(instructions []uint8, inst inst) []uint8 {
 		var isWide = isBitTrue(w)
 		var reg1, reg2 = transformRegToString(reg)
 		//var rm1, rm2 = transformRegToString(rm)
+		var result = ""
+		var translated = translateMemoryDisplacement00(rm)
+		if (translated != "bp") {
+			result = " + " + strconv.Itoa(int(instructions[2]))
+		}
+
 		if (isDestinationReg) {
 			if (isWide) {
 				destination = reg2 
-				source = translateMemoryDisplacement00(rm)
+				source = "[" + translateMemoryDisplacement00(rm) +  string(result) +  "]"
 			} else {
 				destination = reg1 
-				source = translateMemoryDisplacement00(rm) 
+				source = "[" + translateMemoryDisplacement00(rm) +  string(result) + "]"
 			}
 		} else {
 			if (isWide) {
-				destination = translateMemoryDisplacement00(rm) 
+				destination = "[" + translateMemoryDisplacement00(rm) +  string(result) + "]"
 				source = reg2
 			} else {
-				destination = translateMemoryDisplacement00(rm)
+				destination = "[" + translateMemoryDisplacement00(rm) + string(result) + "]"
 				source = reg1
 			}
 		}
-		fmt.Printf("mov %s %s %d \n", destination, source, instructions[2] )
+		fmt.Printf("mov %s, %s \n", destination, source )
 		removeCount += 1
 	}
 	if (mod == 0b10) {
@@ -202,25 +209,30 @@ func disMovComplex(instructions []uint8, inst inst) []uint8 {
 		var isWide = isBitTrue(w)
 		var reg1, reg2 = transformRegToString(reg)
 		//var rm1, rm2 = transformRegToString(rm)
+		var uintResult uint16 = uint16(instructions[3]) << 8 | uint16(instructions[2]) 
+		var result = ""
+		var translated = translateMemoryDisplacement00(rm)
+		if (translated != "bp") {
+			result = " + " + strconv.Itoa(int(uintResult))
+		}
 		if (isDestinationReg) {
 			if (isWide) {
 				destination = reg2 
-				source = translateMemoryDisplacement00(rm)
+				source = "[" + translateMemoryDisplacement00(rm) +  string(result) + "]"
 			} else {
 				destination = reg1 
-				source = translateMemoryDisplacement00(rm) 
+				source = "[" + translateMemoryDisplacement00(rm) +  string(result) + "]"
 			}
 		} else {
 			if (isWide) {
-				destination = translateMemoryDisplacement00(rm)
+				destination = "[" + translateMemoryDisplacement00(rm) + string(result) +  "]"
 				source = reg2
 			} else {
-				destination = translateMemoryDisplacement00(rm)
+				destination = "[" + translateMemoryDisplacement00(rm) + string(result) +  "]"
 				source = reg1
 			}
 		}
-		var result uint16 = uint16(instructions[3]) << 8 | uint16(instructions[2]) 
-		fmt.Printf("mov %s %s + %d \n", destination, source, result)
+		fmt.Printf("mov %s %s \n", destination, source)
 		removeCount += 2
 	}
 
@@ -295,21 +307,21 @@ func translateMemoryDisplacement00(reg uint8) string {
 	var result string
 	switch (reg) {
 		case 0b000:
-			result = "[bx + si]"
+			result = "bx + si"
 		case 0b001:
-			result = "[bx + di]"
+			result = "bx + di"
 		case 0b010:
-			result = "[bp + si]"
+			result = "bp + si"
 		case 0b011:
-			result = "[bp + di]"
+			result = "bp + di"
 		case 0b100:
-			result = "[si]"
+			result = "si"
 		case 0b101:
-			result = "[di]"
+			result = "di"
 		case 0b110:
-			result = "direct"
+			result = "bp"
 		case 0b111:
-			result = "[bx]"
+			result = "bx"
 	}
 	return result
 }
