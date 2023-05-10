@@ -57,11 +57,71 @@ var instTable = []inst{
 		opCode: 0b0000010,
 		opCodeDiff: 1,
 		params: []P{
+			P{c: 0b00000001, n: "w", len: 0},
+		},
+	},
+	inst{
+		opType: "sub", 
+		opCode: 0b001010,
+		opCodeDiff: 2,
+		params: []P{
+			P{c: 0b00000010, n: "d", len: 1},
+			P{c: 0b00000001, n: "w", len: 0},
+			P{c: 0b11000000, n: "mod", len: 6},
+			P{c: 0b00111000, n: "reg", len: 3},
+			P{c: 0b00000111, n: "rm", len: 0},
+		},
+	},
+	inst{
+		opType: "subImmReg", 
+		opCode: 0b1000,
+		opCodeDiff: 4,
+		params: []P{
 			P{c: 0b00000010, n: "s", len: 1},
 			P{c: 0b00000001, n: "w", len: 0},
 			P{c: 0b11000000, n: "mod", len: 6},
 			P{c: 0b00111000, n: "reg", len: 3},
 			P{c: 0b00000111, n: "rm", len: 0},
+		},
+	},
+	inst{
+		opType: "subImmAcc", 
+		opCode: 0b0010110,
+		opCodeDiff: 1,
+		params: []P{
+			P{c: 0b00000001, n: "w", len: 0},
+		},
+	},
+	inst{
+		opType: "cmp", 
+		opCode: 0b001110,
+		opCodeDiff: 2,
+		params: []P{
+			P{c: 0b00000010, n: "d", len: 1},
+			P{c: 0b00000001, n: "w", len: 0},
+			P{c: 0b11000000, n: "mod", len: 6},
+			P{c: 0b00111000, n: "reg", len: 3},
+			P{c: 0b00000111, n: "rm", len: 0},
+		},
+	},
+	inst{
+		opType: "cmpImmReg", 
+		opCode: 0b100000,
+		opCodeDiff: 4,
+		params: []P{
+			P{c: 0b00000010, n: "s", len: 1},
+			P{c: 0b00000001, n: "w", len: 0},
+			P{c: 0b11000000, n: "mod", len: 6},
+			P{c: 0b00111000, n: "reg", len: 3},
+			P{c: 0b00000111, n: "rm", len: 0},
+		},
+	},
+	inst{
+		opType: "cmpImmAcc", 
+		opCode: 0b0011110,
+		opCodeDiff: 1,
+		params: []P{
+			P{c: 0b00000001, n: "w", len: 0},
 		},
 	},
 } 
@@ -106,13 +166,31 @@ func disassembleAndReturn(instructions []uint8) []uint8 {
 				return disMovImmediateToRegister(instructions, inst)
 			}
 			if inst.opType == "add" {
-				return disAddComplex(instructions, inst)
+				return disAddComplex("add", instructions, inst)
 			}
 			if inst.opType == "addImmReg" {
-				return disAddImmediateToRegister(instructions, inst)
+				return disAddImmediateToRegister("add", instructions, inst)
 			}
 			if inst.opType == "addImmAcc" {
-				return disAddAccumulatorToRegister(instructions, inst)
+				return disAddAccumulatorToRegister("add", instructions, inst)
+			}
+			if inst.opType == "sub" {
+				return disAddComplex("sub", instructions, inst)
+			}
+			if inst.opType == "subImmReg" {
+				return disAddImmediateToRegister("sub", instructions, inst)
+			}
+			if inst.opType == "subImmAcc" {
+				return disAddAccumulatorToRegister("sub", instructions, inst)
+			}
+			if inst.opType == "cmp" {
+				return disAddComplex("cmp", instructions, inst)
+			}
+			if inst.opType == "cmpImmReg" {
+				return disAddImmediateToRegister("cmp", instructions, inst)
+			}
+			if inst.opType == "cmpImmAcc" {
+				return disAddAccumulatorToRegister("cmp", instructions, inst)
 			}
 		}
 	}
@@ -286,7 +364,7 @@ func disMovComplex(instructions []uint8, inst inst) []uint8 {
 	return instructions[removeCount:]
 }
 
-func disAddComplex(instructions []uint8, inst inst) []uint8 {
+func disAddComplex(instrcutionType string, instructions []uint8, inst inst) []uint8 {
 	var removeCount = 0
 	// first one is for opCode
 	var instruction = instructions[0]
@@ -328,7 +406,7 @@ func disAddComplex(instructions []uint8, inst inst) []uint8 {
 				source = reg1
 			}
 		}
-		fmt.Printf("add %s %s \n", destination, source)
+		fmt.Printf("%s %s %s \n", instrcutionType, destination, source)
 	}
 
 	// handle direct addressing with no displacement
@@ -356,7 +434,7 @@ func disAddComplex(instructions []uint8, inst inst) []uint8 {
 				source = reg1
 			}
 		}
-		fmt.Printf("add %s, %s \n", destination, source)
+		fmt.Printf("%s %s, %s \n", instrcutionType, destination, source)
 	}
 	if (mod == 0b01) {
 		var destination = ""
@@ -388,7 +466,7 @@ func disAddComplex(instructions []uint8, inst inst) []uint8 {
 				source = reg1
 			}
 		}
-		fmt.Printf("add %s, %s \n", destination, source )
+		fmt.Printf("%s %s, %s \n", instrcutionType, destination, source )
 		removeCount += 1
 	}
 	if (mod == 0b10) {
@@ -421,14 +499,14 @@ func disAddComplex(instructions []uint8, inst inst) []uint8 {
 				source = reg1
 			}
 		}
-		fmt.Printf("add %s %s \n", destination, source)
+		fmt.Printf("%s %s %s \n", instrcutionType, destination, source)
 		removeCount += 2
 	}
 
 	return instructions[removeCount:]
 }
 
-func disAddImmediateToRegister(instructions []uint8, inst inst) []uint8 {
+func disAddImmediateToRegister(instructionType string, instructions []uint8, inst inst) []uint8 {
 	var removeCount = 0
 	// first one is for opCode
 	//var instruction = instructions[0]
@@ -439,7 +517,7 @@ func disAddImmediateToRegister(instructions []uint8, inst inst) []uint8 {
 	var registers = instructions[1]
 	removeCount += 1
 	var mod = clearBits(registers, inst.getP("mod").c, inst.getP("mod").len)
-	//var reg = clearBits(registers, inst.getP("reg").c, inst.getP("reg").len)
+	var reg = clearBits(registers, inst.getP("reg").c, inst.getP("reg").len)
 	var rm = clearBits(registers, inst.getP("rm").c, inst.getP("rm").len)
 
 	if mod == 0b11 {
@@ -448,7 +526,7 @@ func disAddImmediateToRegister(instructions []uint8, inst inst) []uint8 {
 		var _, rm2 = transformRegToString(rm)
 		var immediateValue = instructions[2]
 		removeCount +=1
-		fmt.Printf("add %s %d \n", rm2, immediateValue)
+		fmt.Printf("%s %s %d \n", instructionType, rm2, immediateValue)
 	}
 	if mod == 0b00 {
 		//var isS = isBitTrue(s)
@@ -456,7 +534,15 @@ func disAddImmediateToRegister(instructions []uint8, inst inst) []uint8 {
 		var rm2 = translateMemoryDisplacement00(rm)
 		var immediateValue = instructions[2]
 		removeCount +=1
-		fmt.Printf("add [%s] %d \n", rm2, immediateValue)
+		if (reg == 0b000) {
+			fmt.Printf("add [%s] %d \n", instructionType, rm2, immediateValue)
+		}
+		if (reg == 0b101) {
+			fmt.Printf("sub [%s] %d \n", instructionType, rm2, immediateValue)
+		}
+		if (reg == 0b111) {
+			fmt.Printf("cmp [%s] %d \n", instructionType, rm2, immediateValue)
+		}
 	}
 	if mod == 0b10 {
 		//var isS = isBitTrue(s)
@@ -464,12 +550,20 @@ func disAddImmediateToRegister(instructions []uint8, inst inst) []uint8 {
 		var rm2 = translateMemoryDisplacement00(rm)
 		var immediateValue = instructions[2]
 		removeCount +=1
-		fmt.Printf("add [%s] %d \n", rm2, immediateValue)
+		if (reg == 0b000) {
+			fmt.Printf("add [%s] %d \n", instructionType, rm2, immediateValue)
+		}
+		if (reg == 0b101) {
+			fmt.Printf("sub [%s] %d \n", instructionType, rm2, immediateValue)
+		}
+		if (reg == 0b111) {
+			fmt.Printf("cmp [%s] %d \n", instructionType, rm2, immediateValue)
+		}
 	}
 	return instructions[removeCount:]
 }
 
-func disAddAccumulatorToRegister(instructions []uint8, inst inst) []uint8 {
+func disAddAccumulatorToRegister(instructionType string, instructions []uint8, inst inst) []uint8 {
 	var removeCount = 0
 
 	var instruction = instructions[0]
@@ -479,10 +573,10 @@ func disAddAccumulatorToRegister(instructions []uint8, inst inst) []uint8 {
 	if (isBitTrue(w)) {
 		var uintResult uint16 = uint16(instructions[2]) << 8 | uint16(instructions[1]) 
 		removeCount += 2
-		fmt.Printf("add ax %d \n", uintResult)
+		fmt.Printf("%s ax %d \n", instructionType, uintResult)
 	} else {
 		removeCount += 1
-		fmt.Printf("add al %d \n", instructions[1])
+		fmt.Printf("%s al %d \n", instructionType, instructions[1])
 	}
 	return instructions[removeCount:]
 }
