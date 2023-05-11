@@ -193,8 +193,72 @@ func disassembleAndReturn(instructions []uint8) []uint8 {
 				return disAddAccumulatorToRegister("cmp", instructions, inst)
 			}
 		}
+		//else {
+		//	return disassembleJumps(instructions)
+		//}
 	}
-	return instructions
+	return disassembleJumps(instructions)
+	//return instructions
+}
+
+func disassembleJumps(instructions []uint8) []uint8 {
+	var removeCount = 0
+	var instruction = instructions[0]
+	removeCount += 1
+	var name = ""
+	switch (instruction) {
+		case 0b01110100:
+			name = "je"
+		case 0b01111100:
+			name = "jl"
+		case 0b01111110:
+			name = "jle"
+		case 0b01110010:
+			name = "jb"
+		case 0b01110110:
+			name = "jbe"
+		case 0b01111010:
+			name = "jp"
+		case 0b01110000:
+			name = "jo"
+		case 0b01111000:
+			name = "js"
+		case 0b01110101:
+			name = "jne"
+		case 0b01111101:
+			name = "jnl"
+		case 0b01111111:
+			name = "jg"
+		case 0b01110011:
+			name = "jnb"
+		case 0b01110111:
+			name = "ja"
+		case 0b01111011:
+			name = "jnp"
+		case 0b01110001:
+			name = "jno"
+		case 0b01111001:
+			name = "jns"
+		case 0b11100010:
+			name = "loop"
+		case 0b11100001:
+			name = "loopz"
+		case 0b11100000:
+			name = "loopnz"
+		case 0b11100011:
+			name = "jcxz"
+	}
+	if (name == "") {
+		return instructions
+	}
+	removeCount += 1
+	fmt.Printf("%s %d \n", name, instructions[1])
+
+	return instructions[removeCount:]
+}
+
+func getJumpName(instruction uint8) {
+
 }
 
 //only one byte big operation

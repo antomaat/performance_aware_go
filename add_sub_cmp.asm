@@ -15,7 +15,6 @@ add [bp + 0], bx
 add [bx + 2], cx
 add [bp + si + 4], bh
 add [bp + di + 6], di
-add byte [bx], 34
 add ax, [bp]
 add al, [bx + si]
 add ax, bx
@@ -69,3 +68,25 @@ cmp al, ah
 cmp ax, 1000
 cmp al, -30
 cmp al, 9
+
+label:
+je label
+jl label
+jle label
+jb label
+jbe label
+jp label
+jo label
+js label
+jne label
+jnl label
+jg label
+jnb label
+ja label
+jnp label
+jno label
+jns label
+loop label
+loopz label
+loopnz label
+jcxz label
