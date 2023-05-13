@@ -126,6 +126,15 @@ var instTable = []inst{
 	},
 } 
 
+var ax []uint8 = []uint8{0b00000000, 0b00000000}
+var bx []uint8 = []uint8{0b00000000, 0b00000000}
+var cx []uint8 = []uint8{0b00000000, 0b00000000}
+var dx []uint8 = []uint8{0b00000000, 0b00000000}
+var sp uint16 = 0b0000000000000000
+var bp uint16 = 0b0000000000000000
+var si uint16 = 0b0000000000000000
+var di uint16 = 0b0000000000000000
+
 func (inst inst) getP(value string) P {
 	for index := 0; index < len(inst.params); index++ {
 		if inst.params[index].n == value {
@@ -136,12 +145,8 @@ func (inst inst) getP(value string) P {
 }
 
 func main() {
-	//data, err := os.ReadFile("./single_instruction")
-	//check(err)
-	//data, err := ioutil.ReadFile("single_instruction")
-	//data, err := ioutil.ReadFile("multiple_instructions")
-	//data, err := ioutil.ReadFile("mov_inst_complex")
-	data, err := ioutil.ReadFile("add_sub_cmp")
+	//data, err := ioutil.ReadFile("add_sub_cmp")
+	data, err := ioutil.ReadFile("register_movs")
 	fmt.Printf("inst %08b\n", data)
 	check(err)
 	var max = 30
@@ -151,6 +156,22 @@ func main() {
 		max -= 1
 		//fmt.Printf("inst %08b\n", data)
 	}
+	printRegisters()
+}
+
+func printRegisters() {
+	var result uint16 = uint16(ax[1]) << 8 | uint16(ax[0]) 
+	fmt.Printf("%s = %08b, %08b => %d\n", "ax", ax[0], ax[1], result)
+	result = uint16(bx[1]) << 8 | uint16(bx[0]) 
+	fmt.Printf("%s = %08b, %08b => %d\n", "bx", bx[0], bx[1], result)
+	result = uint16(cx[1]) << 8 | uint16(cx[0]) 
+	fmt.Printf("%s = %08b, %08b => %d\n", "cx", cx[0], cx[1], result)
+	result = uint16(dx[1]) << 8 | uint16(dx[0]) 
+	fmt.Printf("%s = %08b, %08b => %d\n", "dx", dx[0], dx[1], result)
+	fmt.Printf("%s = %016b => %d\n", "sp", sp, sp)
+	fmt.Printf("%s = %016b => %d\n", "bp", bp, bp)
+	fmt.Printf("%s = %016b => %d\n", "si", si, si)
+	fmt.Printf("%s = %016b => %d\n", "di", di, di)
 }
 
 func disassembleAndReturn(instructions []uint8) []uint8 {
@@ -257,9 +278,106 @@ func disassembleJumps(instructions []uint8) []uint8 {
 	return instructions[removeCount:]
 }
 
-func getJumpName(instruction uint8) {
-
+func updateRegister(reg string, value uint8) {
+	switch(reg) {
+	case "al":
+		ax[0] = value 
+	case "ah":
+		ax[1] = value 
+	}
 }
+
+func updateRegisterToRegister(destination string, source string) {
+	var src = getRegister(source)
+	switch(destination) {
+	case "ax":
+		ax[0] = src[0] 
+		ax[1] = src[1] 
+	case "bx":
+		bx[0] = src[0] 
+		bx[1] = src[1] 
+	case "cx":
+		cx[0] = src[0] 
+		cx[1] = src[1] 
+	case "dx":
+		dx[0] = src[0] 
+		dx[1] = src[1]
+	case "sp":
+		sp = u8Tou16(src[0], src[1])
+	case "bp":
+		bp = u8Tou16(src[0], src[1])
+	case "si":
+		si = u8Tou16(src[0], src[1])
+	case "di":
+		di = u8Tou16(src[0], src[1])
+	}
+}
+
+func getRegister(reg string) []uint8 {
+	switch(reg) {
+	case "ax":
+		return ax
+	case "bx":
+		return bx
+	case "cx":
+		return cx
+	case "dx":
+		return dx
+	case "sp":
+	return u16toArray(sp)
+	case "bp":
+	return u16toArray(bp)
+	case "si":
+	return u16toArray(si)
+	case "di":
+	return u16toArray(di)
+	}
+	return []uint8{}
+}
+
+func u16toArray(input uint16) []uint8 {
+	var value1 uint8 = uint8(input)  
+	var value2 uint8 = uint8(input >> 8) 
+	return []uint8{value1, value2}
+}
+
+func u8Tou16(value uint8, value2 uint8) uint16{
+	return uint16(value2) << 8 | uint16(value) 
+}
+
+func updateRegisterX(reg string, value uint8, value2 uint8) {
+	fmt.Printf("update register %s\n", reg)
+	switch(reg) {
+	case "ax":
+		ax[0] = value 
+		ax[1] = value2
+	case "bx":
+		bx[0] = value 
+		bx[1] = value2
+	case "cx":
+		cx[0] = value 
+		cx[1] = value2
+	case "dx":
+		dx[0] = value 
+		dx[1] = value2
+	}
+	var result uint16 = uint16(value2) << 8 | uint16(value) 
+	updateRegister16(reg, result)
+}
+
+func updateRegister16(reg string, value uint16) {
+	switch(reg) {
+	case "sp":
+		sp = value
+	case "bp":
+		bp = value
+	case "si":
+		si = value
+	case "di":
+		di = value
+	}
+}
+
 
 //only one byte big operation
 func disMovImmediateToRegister(instructions []uint8, inst inst) []uint8 {
@@ -269,16 +387,16 @@ func disMovImmediateToRegister(instructions []uint8, inst inst) []uint8 {
 	var w = clearBits(instruction, inst.getP("w").c, inst.getP("w").len)
 	var reg = clearBits(instruction, inst.getP("reg").c, inst.getP("reg").len)
 
-	//fmt.Printf("w %08b\n", w)
 	var short, wide = transformRegToString(reg)
 
 	if (isBitTrue(w)){
 		removeCount += 2
 		var result uint16 = uint16(instructions[2]) << 8 | uint16(instructions[1]) 
-		//fmt.Printf("result %016b\n", result)
+		updateRegisterX(wide, instructions[1], instructions[2])
 		fmt.Printf("mov %s %d\n", wide, result)
 	} else {
 		removeCount += 1
+		updateRegister(short, instructions[1])
 		fmt.Printf("mov %s %d\n", short, instructions[1])
 	}
 
@@ -328,6 +446,7 @@ func disMovComplex(instructions []uint8, inst inst) []uint8 {
 				source = reg1
 			}
 		}
+		updateRegisterToRegister(destination, source)
 		fmt.Printf("mov %s %s \n", destination, source)
 	}
 
