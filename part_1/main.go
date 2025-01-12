@@ -146,7 +146,7 @@ func (inst inst) getP(value string) P {
 
 func main() {
 	//data, err := ioutil.ReadFile("add_sub_cmp")
-	data, err := ioutil.ReadFile("register_movs")
+	data, err := ioutil.ReadFile("add_flags")
 	fmt.Printf("inst %08b\n", data)
 	check(err)
 	var max = 30
@@ -346,7 +346,6 @@ func u8Tou16(value uint8, value2 uint8) uint16{
 }
 
 func updateRegisterX(reg string, value uint8, value2 uint8) {
-	fmt.Printf("update register %s\n", reg)
 	switch(reg) {
 	case "ax":
 		ax[0] = value 
@@ -588,6 +587,13 @@ func disAddComplex(instrcutionType string, instructions []uint8, inst inst) []ui
 				destination = rm1 
 				source = reg1
 			}
+		}
+		if (instrcutionType == "sub") {
+			var destinationValue = getRegister(destination)
+			var sourceValue = getRegister(source)
+			var destu16 = u8Tou16(destinationValue[0], destinationValue[1])
+			var srcu16 = u8Tou16(sourceValue[0], sourceValue[1])
+			updateRegister16(destination, uint16(destu16 - srcu16))
 		}
 		fmt.Printf("%s %s %s \n", instrcutionType, destination, source)
 	}
