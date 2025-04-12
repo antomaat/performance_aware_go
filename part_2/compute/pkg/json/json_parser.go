@@ -2,6 +2,7 @@ package json
 
 import "fmt"
 
-func CreateJson() {
+func CreateHarversineJson() {
+
     fmt.Printf("hello json\n")
 }
